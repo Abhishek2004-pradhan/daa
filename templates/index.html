@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Investment Portfolio Optimizer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h2>Investment Portfolio Optimizer</h2>
+    <label for="budget">Enter Budget (₹):</label>
+    <input type="number" id="budget" placeholder="Enter your budget" required>
+
+    <h3>Add Investments:</h3>
+    <table>
+        <tr>
+            <th>Investment Name</th>
+            <th>Cost (₹)</th>
+            <th>Expected Return (₹)</th>
+            <th>Action</th>
+        </tr>
+        <tbody id="investmentTable"></tbody>
+    </table>
+    
+    <button onclick="addInvestment()">Add Investment</button>
+    <button onclick="optimizeInvestments()">Optimize</button>
+
+    <h3>Optimal Portfolio:</h3>
+    <div id="result"></div>
+
+    <script>
+        let investments = [];
+
+        function addInvestment() {
+            let table = document.getElementById("investmentTable");
+            let row = table.insertRow();
+            let name = prompt("Enter Investment Name:");
+            let cost = prompt("Enter Investment Cost (₹):");
+            let return_value = prompt("Enter Expected Return (₹):");
+            
+            investments.push({ name, cost, return_value });
+            
+            row.innerHTML = `<td>${name}</td><td>₹${cost}</td><td>₹${return_value}</td><td><button onclick="removeInvestment(this)">Remove</button></td>`;
+        }
+
+        function removeInvestment(btn) {
+            let row = btn.parentNode.parentNode;
+            let index = row.rowIndex - 1;
+            investments.splice(index, 1);
+            document.getElementById("investmentTable").deleteRow(index);
+        }
+
+        function optimizeInvestments() {
+            let budget = document.getElementById("budget").value;
+            fetch('/optimize', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ budget, investments })
+            })
+            .then(response => response.json())
+            .then(data => {
+                let resultDiv = document.getElementById("result");
+                resultDiv.innerHTML = `<p><strong>Max Return:</strong> ₹${data.max_return}</p>`;
+                data.selected.forEach(inv => {
+                    resultDiv.innerHTML += `<p>${inv.name} (Cost: ₹${inv.cost}, Return: ₹${inv.return_value})</p>`;
+                });
+            });
+        }
+    </script>
+</body>
+</html>
